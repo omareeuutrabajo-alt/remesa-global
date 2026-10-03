@@ -1,0 +1,98 @@
+[
+  {
+    "archivo": "01-splash.png",
+    "etiqueta": "Splash · arranque y restauración de sesión"
+  },
+  {
+    "archivo": "02-onboarding-1.png",
+    "etiqueta": "Bienvenida 1 · Llega en minutos"
+  },
+  {
+    "archivo": "03-onboarding-2.png",
+    "etiqueta": "Bienvenida 2 · Tarifas transparentes"
+  },
+  {
+    "archivo": "04-onboarding-3.png",
+    "etiqueta": "Bienvenida 3 · Seguridad bancaria"
+  },
+  {
+    "archivo": "05-login.png",
+    "etiqueta": "Inicio de sesión"
+  },
+  {
+    "archivo": "06-recuperar.png",
+    "etiqueta": "Recuperar contraseña · envío del enlace"
+  },
+  {
+    "archivo": "07-registro-vacio.png",
+    "etiqueta": "Registro · formulario limpio"
+  },
+  {
+    "archivo": "08-registro-debil.png",
+    "etiqueta": "Registro · contraseña débil (medidor en rojo)"
+  },
+  {
+    "archivo": "09-registro-lleno.png",
+    "etiqueta": "Registro · validado y términos aceptados"
+  },
+  {
+    "archivo": "10-otp.png",
+    "etiqueta": "Verificación OTP · código de demostración visible"
+  },
+  {
+    "archivo": "11-otp-error.png",
+    "etiqueta": "OTP incorrecto · casillas en rojo"
+  },
+  {
+    "archivo": "12-pin-vacio.png",
+    "etiqueta": "PIN · creación"
+  },
+  {
+    "archivo": "13-pin-escribiendo.png",
+    "etiqueta": "PIN · puntos rellenándose"
+  },
+  {
+    "archivo": "14-pin-confirmar.png",
+    "etiqueta": "PIN · confirmación"
+  },
+  {
+    "archivo": "15-kyc-1.png",
+    "etiqueta": "KYC 1 · tipo y número de documento"
+  },
+  {
+    "archivo": "16-kyc-1-lleno.png",
+    "etiqueta": "KYC 1 · datos completados"
+  },
+  {
+    "archivo": "17-kyc-2.png",
+    "etiqueta": "KYC 2 · captura del documento"
+  },
+  {
+    "archivo": "18-kyc-2-lleno.png",
+    "etiqueta": "KYC 2 · ambas caras cargadas"
+  },
+  {
+    "archivo": "19-kyc-3.png",
+    "etiqueta": "KYC 3 · selfie"
+  },
+  {
+    "archivo": "20-kyc-3-lleno.png",
+    "etiqueta": "KYC 3 · selfie capturada"
+  },
+  {
+    "archivo": "21-kyc-revision.png",
+    "etiqueta": "KYC · en revisión (se aprueba sola en 10 s)"
+  },
+  {
+    "archivo": "22-inicio.png",
+    "etiqueta": "Inicio · sesión verificada y límites KYC"
+  },
+  {
+    "archivo": "23-desbloquear.png",
+    "etiqueta": "Desbloqueo con PIN tras la inactividad"
+  },
+  {
+    "archivo": "24-inicio-2.png",
+    "etiqueta": "Inicio · de vuelta tras desbloquear"
+  }
+]

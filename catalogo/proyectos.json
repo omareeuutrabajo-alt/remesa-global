@@ -1,0 +1,68 @@
+{
+  "titular": {
+    "nombre": "Catálogo de proyectos",
+    "lema": "Software que funciona de verdad: se abre, se usa y se rompe cuando debe romperse.",
+    "descripcion": "Cada ficha apunta a una demostración en vivo, al código y a las pruebas que lo respaldan. Nada de maquetas: todo lo que aparece aquí está desplegado y se puede recorrer de principio a fin.",
+    "contacto": [
+      { "etiqueta": "Correo", "valor": "hola@ejemplo.com", "url": "mailto:hola@ejemplo.com" },
+      { "etiqueta": "GitHub", "valor": "github.com/tu-usuario", "url": "https://github.com/tu-usuario" },
+      { "etiqueta": "LinkedIn", "valor": "linkedin.com/in/tu-perfil", "url": "https://linkedin.com/in/tu-perfil" }
+    ]
+  },
+
+  "proyectos": [
+    {
+      "id": "remesa-global",
+      "nombre": "Remesa Global",
+      "lema": "Módulo de inicio de nivel fintech para una aplicación de remesas",
+      "estado": "en-vivo",
+      "destacado": true,
+      "anio": 2026,
+      "portada": "portadas/remesa-global.jpg",
+      "icono": "portadas/remesa-global-icono.jpg",
+      "descripcion": "Autenticación completa de extremo a extremo: presentación, onboarding, registro, inicio de sesión, verificación por OTP, PIN de seis dígitos, biometría, recuperación de contraseña y verificación de identidad (KYC) con documento y selfie. El cliente es Flutter; el servidor, una API Express con JWT, rotación de refresh tokens, auditoría y control de dispositivos de confianza.",
+      "porQue": "La pantalla de inicio es donde una aplicación financiera se gana o se pierde la confianza. Quería construir ese tramo con el mismo rigor que exige un banco: bloqueo por intentos, códigos de un solo uso, detección de reutilización de tokens y registro de cada acción sensible.",
+      "stack": ["Flutter", "Dart", "Riverpod", "go_router", "Node.js", "Express", "PostgreSQL", "Supabase", "Netlify", "JWT", "bcrypt"],
+      "metricas": [
+        { "valor": "13", "etiqueta": "pantallas" },
+        { "valor": "52", "etiqueta": "pruebas e2e" },
+        { "valor": "27", "etiqueta": "endpoints" },
+        { "valor": "7.700", "etiqueta": "líneas" }
+      ],
+      "caracteristicas": [
+        "OTP de 6 dígitos con caducidad, límite de intentos y espera entre reenvíos",
+        "Rotación de refresh tokens con detección de reutilización: si un token robado se repite, caen todas las sesiones",
+        "PIN y biometría ligados al dispositivo mediante un token opaco revocable",
+        "KYC con subida de documento y selfie a un bucket privado y URLs firmadas de 5 minutos",
+        "Bloqueo progresivo de cuenta, registro de auditoría y límites de envío por nivel verificado",
+        "Base de datos sin acceso anónimo: RLS activo y permisos revocados para las claves públicas"
+      ],
+      "enlaces": [
+        { "etiqueta": "Demostración en vivo", "url": "https://remesa-global.netlify.app", "tipo": "primario" },
+        { "etiqueta": "Recorrido en 24 capturas", "url": "../capturas/galeria.html", "tipo": "secundario" },
+        { "etiqueta": "Código", "url": "https://github.com/tu-usuario/remesa-global", "tipo": "secundario" },
+        { "etiqueta": "Guía de prueba", "url": "../GUIA_DE_PRUEBA.md", "tipo": "secundario" }
+      ],
+      "notas": "Modo demostración: el código de verificación aparece en pantalla y el KYC se aprueba solo a los 10 segundos. No hay pasarela de SMS ni verificador documental contratados, y así se dice en la propia interfaz."
+    }
+  ],
+
+  "plantilla": {
+    "_comentario": "Copia este bloque dentro de \"proyectos\" y vuelve a ejecutar: node herramientas/generar-catalogo.js",
+    "id": "identificador-sin-espacios",
+    "nombre": "Nombre del proyecto",
+    "lema": "Una línea que explique qué es",
+    "estado": "en-vivo | en-curso | archivado",
+    "destacado": false,
+    "anio": 2026,
+    "portada": "",
+    "icono": "",
+    "descripcion": "Qué hace y para quién.",
+    "porQue": "Por qué lo construiste y qué problema resuelve.",
+    "stack": ["Tecnología 1", "Tecnología 2"],
+    "metricas": [{ "valor": "0", "etiqueta": "unidad" }],
+    "caracteristicas": ["Lo que sabe hacer"],
+    "enlaces": [{ "etiqueta": "Demostración", "url": "https://…", "tipo": "primario" }],
+    "notas": ""
+  }
+}

@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────
+#  Remesa Global · despliegue en Netlify
+#  Front: Flutter Web (estático, CDN)   ·   API: función Node
+#  Base de datos: Supabase Postgres     ·   Ficheros: Supabase Storage
+# ─────────────────────────────────────────────────────────────
+
+[build]
+  command = "bash netlify/build.sh"
+  publish = "mobile/build/web"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Evita que npm intente compilar dependencias nativas que no usamos.
+  NPM_FLAGS = "--no-audit --no-fund"
+
+[functions]
+  node_bundler = "esbuild"
+  # pg carga pg-native de forma condicional: se deja fuera del bundle.
+  external_node_modules = ["pg", "pg-native"]
+  included_files = ["supabase/migrations/**"]
+
+# ── La API y sus rutas auxiliares van a la función ──
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/health"
+  to = "/.netlify/functions/api/health"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/docs/*"
+  to = "/.netlify/functions/api/docs/:splat"
+  status = 200
+  force = true
+
+# ── Todo lo demás lo resuelve el enrutador de Flutter (SPA) ──
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ── Cabeceras ──
+# La API ya envía las suyas vía Helmet; aquí sólo se cubre el estático.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # CanvasKit necesita WebAssembly y workers desde blob:
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' data: blob: https://fonts.gstatic.com"
+
+# Los artefactos de Flutter llevan hash en el nombre: caché agresiva.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/canvaskit/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# El index y el service worker nunca se cachean: si no, el despliegue
+# nuevo no llega a los navegadores que ya visitaron el sitio.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/flutter_service_worker.js"
+  [headers.values]
+    Cache-Control = "no-cache"

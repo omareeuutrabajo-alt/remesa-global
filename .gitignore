@@ -1,0 +1,24 @@
+# Dependencias
+**/node_modules/
+
+# Artefactos de compilación
+# ⚠ Si prefieres que Netlify publique el build web sin recompilar Flutter,
+#   comenta la línea siguiente y añade mobile/build/web al repositorio.
+**/build/
+**/.dart_tool/
+
+# Datos locales y secretos
+backend/data/
+backend/uploads/*
+!backend/uploads/.gitkeep
+.env
+.env.local
+backend/.env
+*.sqlite
+*.sqlite-*
+
+# Netlify
+.netlify/
+
+# Herramientas
+herramientas/node_modules/

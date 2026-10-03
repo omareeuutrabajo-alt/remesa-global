@@ -1,0 +1,23 @@
+{
+  "name": "remesa-global",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remesa Global · monorepo: API Node/Express + cliente Flutter. Despliegue en Netlify + Supabase.",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace backend",
+    "start": "npm run start --workspace backend",
+    "migrate": "npm run migrate --workspace backend",
+    "test:e2e": "npm run test:e2e --workspace backend",
+    "db:local": "npm run db:local --workspace backend",
+    "build:web": "bash netlify/build.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "serverless-http": "^3.2.0"
+  }
+}

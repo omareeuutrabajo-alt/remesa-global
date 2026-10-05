@@ -16,8 +16,8 @@
 
 [functions]
   node_bundler = "esbuild"
-  # pg carga pg-native de forma condicional: se deja fuera del bundle.
-  external_node_modules = ["pg", "pg-native"]
+  # pg se empaqueta en el bundle; solo pg-native (opcional, nativo) queda fuera.
+  external_node_modules = ["pg-native"]
   included_files = ["supabase/migrations/**"]
 
 # ── La API y sus rutas auxiliares van a la función ──

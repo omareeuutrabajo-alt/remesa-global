@@ -58,3 +58,14 @@ flutter pub get
 # --no-web-resources-cdn: CanvasKit se sirve desde /canvaskit (mismo origen).
 # Sin esta opción lo pide a www.gstatic.com y la CSP lo bloquea: pantalla en blanco.
 flutter build web --release --no-wasm-dry-run --no-web-resources-cdn
+
+# Red de seguridad: si la opción anterior no dejara marcado el uso del
+# CanvasKit local, se fuerza aquí. Sin esto el motor se pide a gstatic.com,
+# la CSP lo bloquea y la aplicación queda en blanco en todos los dispositivos.
+BOOT="$SALIDA/flutter_bootstrap.js"
+if [ -f "$BOOT" ] && ! grep -q '"useLocalCanvasKit":true' "$BOOT"; then
+  sed -i 's/_flutter\.buildConfig = {/_flutter.buildConfig = {"useLocalCanvasKit":true,/' "$BOOT"
+  echo "  ▸ CanvasKit forzado a local en flutter_bootstrap.js"
+fi
+
+echo "✔ Build web generado en $SALIDA"

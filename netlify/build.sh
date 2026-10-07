@@ -55,6 +55,6 @@ cd "$RAIZ/mobile"
 flutter pub get
 # --no-wasm-dry-run: el canal estable falla la comprobación wasm con
 # dependencias que usan dart:html (image_picker / flutter_secure_storage).
-flutter build web --release --no-wasm-dry-run
-
-echo "✔ Build web generado en $SALIDA"
+# --no-web-resources-cdn: CanvasKit se sirve desde /canvaskit (mismo origen).
+# Sin esta opción lo pide a www.gstatic.com y la CSP lo bloquea: pantalla en blanco.
+flutter build web --release --no-wasm-dry-run --no-web-resources-cdn

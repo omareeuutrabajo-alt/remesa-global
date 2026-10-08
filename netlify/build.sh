@@ -187,6 +187,100 @@ FIN_ICONOS
 }
 
 # ═════════════════════════════════════════════════════════════
+#  Service worker propio
+#
+#  Flutter 3.47 ya no trae uno útil: su flutter_service_worker.js se
+#  desregistra a sí mismo en cuanto se activa y no tiene manejador `fetch`.
+#  Chrome en Android exige exactamente eso —un service worker registrado y
+#  con manejador fetch— para ofrecer «Instalar aplicación»; sin él solo
+#  permite crear un acceso directo, que es un enlace y no una app.
+#
+#  Se sobrescribe ese mismo archivo en lugar de añadir otro: así lo registra
+#  el propio cargador de Flutter y no hay dos service workers peleándose por
+#  el mismo ámbito. Estrategia: la red manda; la caché solo responde si la
+#  red falla (modo avión, metro, cobertura mala).
+# ═════════════════════════════════════════════════════════════
+service_worker() {
+  local destino="$SALIDA/flutter_service_worker.js"
+  [ -f "$destino" ] || return 0
+  local version="${COMMIT_REF:-local}-$(date -u +%Y%m%d%H%M%S)"
+
+  echo "▸ Escribiendo service worker (versión $version)…"
+  cat > "$destino" <<FIN_SW
+'use strict';
+// Generado por netlify/build.sh — no editar a mano.
+const VERSION = '${version}';
+FIN_SW
+  cat >> "$destino" <<'FIN_SW'
+const CACHE = `remesa-${VERSION}`;
+const SHELL = './';                       // el documento raíz de la SPA
+
+// Nunca se tocan: son la API y las funciones de Netlify. Guardar en caché una
+// respuesta con datos de una sesión sería un fallo de seguridad, no una mejora.
+const NUNCA = /^\/(api|health|\.netlify)\b/;
+
+self.addEventListener('install', (evento) => {
+  self.skipWaiting();                     // el build nuevo manda desde ya
+  evento.waitUntil(
+    caches.open(CACHE).then((c) => c.add(new Request(SHELL, { cache: 'reload' })))
+      .catch(() => {})                    // sin red en la instalación: da igual
+  );
+});
+
+self.addEventListener('activate', (evento) => {
+  evento.waitUntil((async () => {
+    const nombres = await caches.keys();
+    await Promise.all(nombres.filter((n) => n !== CACHE).map((n) => caches.delete(n)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', (evento) => {
+  const peticion = evento.request;
+  if (peticion.method !== 'GET') return;
+
+  const url = new URL(peticion.url);
+  if (url.origin !== self.location.origin) return;   // fuentes, terceros…
+  if (NUNCA.test(url.pathname)) return;              // API y funciones
+
+  // Navegaciones: primero la red, para no servir jamás una versión vieja de
+  // la aplicación. Si no hay red, se devuelve el documento guardado.
+  if (peticion.mode === 'navigate') {
+    evento.respondWith((async () => {
+      try {
+        const respuesta = await fetch(peticion);
+        const copia = respuesta.clone();
+        caches.open(CACHE).then((c) => c.put(SHELL, copia)).catch(() => {});
+        return respuesta;
+      } catch (e) {
+        const guardado = await caches.match(SHELL);
+        if (guardado) return guardado;
+        throw e;
+      }
+    })());
+    return;
+  }
+
+  // Recursos (motor, fuentes de la app, iconos): se responde con lo guardado
+  // si existe y se refresca en segundo plano.
+  evento.respondWith((async () => {
+    const guardado = await caches.match(peticion);
+    const red = fetch(peticion).then((respuesta) => {
+      if (respuesta && respuesta.ok && respuesta.type === 'basic') {
+        const copia = respuesta.clone();
+        caches.open(CACHE).then((c) => c.put(peticion, copia)).catch(() => {});
+      }
+      return respuesta;
+    }).catch(() => guardado);
+    return guardado || red;
+  })());
+});
+FIN_SW
+
+  node --check "$destino" && echo "  ▸ service worker válido ($(wc -c < "$destino") B)"
+}
+
+# ═════════════════════════════════════════════════════════════
 #  Catálogo de proyectos y recorrido de capturas
 #
 #  Se publican dentro del mismo sitio (/catalogo y /capturas) en lugar de
@@ -255,6 +349,7 @@ if [ -f "$SALIDA/index.html" ] && [ "${FORCE_FLUTTER_BUILD:-0}" != "1" ]; then
   echo "✔ Build web ya presente en el repositorio: se publica tal cual."
   echo "  (exporta FORCE_FLUTTER_BUILD=1 para recompilar desde el fuente)"
   marca_pwa
+  service_worker
   publicar_catalogo
   exit 0
 fi
@@ -294,6 +389,7 @@ if [ -f "$BOOT" ] && ! grep -q '"useLocalCanvasKit":true' "$BOOT"; then
 fi
 
 marca_pwa
+service_worker
 publicar_catalogo
 
 echo "✔ Build web generado en $SALIDA"

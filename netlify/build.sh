@@ -278,6 +278,28 @@ self.addEventListener('fetch', (evento) => {
 FIN_SW
 
   node --check "$destino" && echo "  ▸ service worker válido ($(wc -c < "$destino") B)"
+
+  # El cargador de Flutter 3.47 ya no registra ningún service worker: ni
+  # siquiera pide el archivo (comprobado con un navegador real sobre el sitio
+  # publicado). Hay que registrarlo desde la página. El script va en un
+  # archivo aparte porque la CSP del sitio no admite scripts en línea.
+  cat > "$SALIDA/registrar-sw.js" <<'FIN_REGISTRO'
+'use strict';
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('flutter_service_worker.js').catch((error) => {
+      // Sin service worker la aplicación sigue funcionando: solo se pierden
+      // el arranque sin conexión y la instalación como app.
+      console.warn('No se pudo registrar el service worker:', error);
+    });
+  });
+}
+FIN_REGISTRO
+
+  if [ -f "$SALIDA/index.html" ] && ! grep -q 'registrar-sw.js' "$SALIDA/index.html"; then
+    sed -i 's#</body>#  <script src="registrar-sw.js" defer></script>\n</body>#' "$SALIDA/index.html"
+    echo "  ▸ registro inyectado en index.html"
+  fi
 }
 
 # ═════════════════════════════════════════════════════════════

@@ -303,6 +303,171 @@ FIN_REGISTRO
 }
 
 # ═════════════════════════════════════════════════════════════
+#  Invitación a instalar, dentro de la propia aplicación
+#
+#  Encontrar «Instalar y crear acceso directo» en el menú de Chrome está
+#  fuera del alcance de un usuario normal. Android avisa al navegador de que
+#  la web es instalable mediante el evento `beforeinstallprompt`; aquí se
+#  captura, se evita el aviso soso del navegador y se enseña una tarjeta con
+#  la identidad de la aplicación. Un toque y Android pregunta directamente.
+#
+#  Va en HTML y no en Dart a propósito: el diálogo nativo solo se abre si lo
+#  dispara un gesto real sobre un elemento del DOM, y así además no hay que
+#  recompilar la aplicación para cambiar el texto.
+# ═════════════════════════════════════════════════════════════
+boton_instalar() {
+  [ -f "$SALIDA/index.html" ] || return 0
+  echo "▸ Escribiendo la invitación a instalar…"
+
+  cat > "$SALIDA/instalar.js" <<'FIN_INSTALAR'
+'use strict';
+// Generado por netlify/build.sh — no editar a mano.
+(() => {
+  const CLAVE = 'remesaglobal.instalacion.descartada';
+  const ESPERA = 2500;           // deja que la aplicación pinte antes de asomar
+  // La tarjeta se apoya abajo, justo donde la presentación pone «Siguiente».
+  // En esas pantallas no asoma: espera a que el usuario pase a identificarse.
+  const RUTAS_TAPADAS = ['/', '/bienvenida'];
+  let invitacion = null;         // el evento que guarda Android
+  let tarjeta = null;
+  let vigilante = null;
+
+  const rutaLibre = () => {
+    const ruta = (location.pathname || '/').replace(/\/+$/, '') || '/';
+    return !RUTAS_TAPADAS.includes(ruta);
+  };
+
+  const yaInstalada = () =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  function guardar(valor) {
+    try { localStorage.setItem(CLAVE, valor); } catch (e) { /* modo incógnito */ }
+  }
+  function descartada() {
+    try { return localStorage.getItem(CLAVE) === '1'; } catch (e) { return false; }
+  }
+
+  function crear() {
+    const caja = document.createElement('div');
+    caja.setAttribute('role', 'dialog');
+    caja.setAttribute('aria-label', 'Instalar RemesaGlobal');
+    caja.style.cssText = [
+      'position:fixed', 'left:16px', 'right:16px',
+      'bottom:calc(16px + env(safe-area-inset-bottom, 0px))',
+      'z-index:2147483000', 'background:#FFFFFF', 'border-radius:20px',
+      'box-shadow:0 12px 34px rgba(10,23,52,.20)', 'padding:16px',
+      'font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif',
+      'transform:translateY(160%)', 'transition:transform .45s cubic-bezier(.2,.8,.2,1)',
+      'max-width:520px', 'margin:0 auto',
+    ].join(';');
+
+    const fila = document.createElement('div');
+    fila.style.cssText = 'display:flex;align-items:center;gap:12px';
+
+    const icono = document.createElement('img');
+    icono.src = 'icons/Icon-192.png';
+    icono.alt = '';
+    icono.width = 48; icono.height = 48;
+    icono.style.cssText = 'width:48px;height:48px;border-radius:14px;flex:0 0 auto';
+
+    const textos = document.createElement('div');
+    textos.style.cssText = 'flex:1 1 auto;min-width:0';
+    const titulo = document.createElement('div');
+    titulo.textContent = 'Instalar RemesaGlobal';
+    titulo.style.cssText = 'font-size:15px;font-weight:700;color:#0A1734;line-height:1.25';
+    const sub = document.createElement('div');
+    sub.textContent = 'Acceso directo en tu móvil, sin pasar por la tienda.';
+    sub.style.cssText = 'font-size:13px;color:#5A6B8C;line-height:1.35;margin-top:2px';
+    textos.append(titulo, sub);
+
+    const cerrar = document.createElement('button');
+    cerrar.type = 'button';
+    cerrar.setAttribute('aria-label', 'Ahora no');
+    cerrar.textContent = '✕';
+    cerrar.style.cssText = [
+      'flex:0 0 auto', 'width:32px', 'height:32px', 'border:0', 'cursor:pointer',
+      'border-radius:10px', 'background:#F1F4FA', 'color:#5A6B8C', 'font-size:14px',
+    ].join(';');
+    cerrar.addEventListener('click', () => { guardar('1'); ocultar(); });
+
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.textContent = 'Instalar';
+    boton.style.cssText = [
+      'display:block', 'width:100%', 'margin-top:14px', 'padding:13px 18px',
+      'border:0', 'border-radius:14px', 'cursor:pointer', 'color:#FFFFFF',
+      'font-size:15px', 'font-weight:700', 'letter-spacing:.2px',
+      'background:linear-gradient(90deg,#1757D6 0%,#17B3E8 100%)',
+      'box-shadow:0 8px 20px rgba(23,87,214,.32)',
+    ].join(';');
+    boton.addEventListener('click', async () => {
+      if (!invitacion) return;
+      boton.disabled = true;
+      boton.textContent = 'Abriendo…';
+      invitacion.prompt();
+      try {
+        const { outcome } = await invitacion.userChoice;
+        if (outcome !== 'accepted') guardar('1');   // no insistir si dice que no
+      } catch (e) { /* el navegador ya cerró el diálogo */ }
+      invitacion = null;
+      ocultar();
+    });
+
+    fila.append(icono, textos, cerrar);
+    caja.append(fila, boton);
+    return caja;
+  }
+
+  function mostrar() {
+    if (tarjeta || descartada() || yaInstalada() || !invitacion) return;
+    if (!rutaLibre()) return;     // seguimos en la presentación: ya volveremos
+    if (vigilante) { clearInterval(vigilante); vigilante = null; }
+    tarjeta = crear();
+    document.body.appendChild(tarjeta);
+    requestAnimationFrame(() => { tarjeta.style.transform = 'translateY(0)'; });
+  }
+
+  // go_router cambia la dirección al navegar, así que basta con mirarla.
+  // Un vistazo cada segundo y medio no se nota y evita parchear el historial.
+  function vigilarRuta() {
+    if (vigilante) return;
+    vigilante = setInterval(() => {
+      if (descartada() || yaInstalada()) { clearInterval(vigilante); vigilante = null; return; }
+      if (rutaLibre()) mostrar();
+    }, 1500);
+  }
+
+  function ocultar() {
+    if (!tarjeta) return;
+    tarjeta.style.transform = 'translateY(160%)';
+    const fuera = tarjeta;
+    tarjeta = null;
+    setTimeout(() => fuera.remove(), 500);
+  }
+
+  window.addEventListener('beforeinstallprompt', (evento) => {
+    evento.preventDefault();          // nada del aviso gris del navegador
+    invitacion = evento;
+    setTimeout(() => { mostrar(); vigilarRuta(); }, ESPERA);
+  });
+
+  window.addEventListener('appinstalled', () => {
+    guardar('1');
+    if (vigilante) { clearInterval(vigilante); vigilante = null; }
+    ocultar();
+  });
+})();
+FIN_INSTALAR
+
+  if ! grep -q 'instalar.js' "$SALIDA/index.html"; then
+    sed -i 's#</body>#  <script src="instalar.js" defer></script>\n</body>#' "$SALIDA/index.html"
+    echo "  ▸ invitación inyectada en index.html"
+  fi
+  node --check "$SALIDA/instalar.js" && echo "  ▸ instalar.js válido ($(wc -c < "$SALIDA/instalar.js") B)"
+}
+
+# ═════════════════════════════════════════════════════════════
 #  Catálogo de proyectos y recorrido de capturas
 #
 #  Se publican dentro del mismo sitio (/catalogo y /capturas) en lugar de
@@ -372,6 +537,7 @@ if [ -f "$SALIDA/index.html" ] && [ "${FORCE_FLUTTER_BUILD:-0}" != "1" ]; then
   echo "  (exporta FORCE_FLUTTER_BUILD=1 para recompilar desde el fuente)"
   marca_pwa
   service_worker
+  boton_instalar
   publicar_catalogo
   exit 0
 fi
@@ -412,6 +578,7 @@ fi
 
 marca_pwa
 service_worker
+boton_instalar
 publicar_catalogo
 
 echo "✔ Build web generado en $SALIDA"

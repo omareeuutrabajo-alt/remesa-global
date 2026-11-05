@@ -49,8 +49,13 @@ async function issue({ user, purpose, channel = 'sms', req = null }) {
   return {
     challengeId: id,
     expiresInSeconds: env.security.otpTtlMinutes * 60,
-    // Solo en desarrollo: permite probar el flujo completo sin SMS real.
-    devCode: env.dev.exposeOtp ? code : undefined,
+    // CRÍTICO: el código SOLO se revela en la respuesta cuando el propósito
+    // es 'register' (el dueño de una cuenta nueva verificándose a sí mismo
+    // en el mismo instante, sin SMS real en la demo). Para 'login' (segundo
+    // factor en dispositivo nuevo) y 'password_reset' (recuperar una cuenta
+    // ajena) NUNCA se expone aquí: revelarlo permitiría secuestrar la
+    // cuenta de cualquier otra persona sin tener su teléfono ni su correo.
+    devCode: (env.dev.exposeOtp && purpose === 'register') ? code : undefined,
   };
 }
 
